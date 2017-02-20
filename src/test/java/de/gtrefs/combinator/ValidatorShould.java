@@ -6,6 +6,7 @@ import java.util.function.Function;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static de.gtrefs.combinator.ValidatorShould.UserValidation.*;
 
 public class ValidatorShould {
 
@@ -13,12 +14,14 @@ public class ValidatorShould {
     public void yield_valid_for_user_with_email_and_non_empty_name(){
         final User gregor = new User("Gregor Trefs", 31, "mail@mailinator.com");
 
-        final UserValidation validation = todo();
+        UserValidation validation = user -> nameIsNotEmpty.apply(user) && eMailContainsAtSign.apply(user);
 
         assertThat(validation.apply(gregor), is(true));
     }
 
-    interface UserValidation extends Function<User, Boolean> {
+    public interface UserValidation extends Function<User, Boolean> {
+        UserValidation nameIsNotEmpty = user -> !user.name.trim().isEmpty();
+        UserValidation eMailContainsAtSign = user -> user.email.contains("@");
     }
 
     class User {
