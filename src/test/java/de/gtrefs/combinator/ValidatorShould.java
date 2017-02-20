@@ -14,7 +14,7 @@ public class ValidatorShould {
     public void yield_valid_for_user_with_email_and_non_empty_name(){
         final User gregor = new User("Gregor Trefs", 31, "mail@mailinator.com");
 
-        UserValidation validation = user -> nameIsNotEmpty.apply(user) && eMailContainsAtSign.apply(user);
+        UserValidation validation = nameIsNotEmpty.and(eMailContainsAtSign);
 
         assertThat(validation.apply(gregor), is(true));
     }
@@ -22,6 +22,10 @@ public class ValidatorShould {
     public interface UserValidation extends Function<User, Boolean> {
         UserValidation nameIsNotEmpty = user -> !user.name.trim().isEmpty();
         UserValidation eMailContainsAtSign = user -> user.email.contains("@");
+
+        default UserValidation and(UserValidation other){
+            return user -> this.apply(user) && other.apply(user);
+        }
     }
 
     class User {
