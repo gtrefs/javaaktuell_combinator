@@ -8,6 +8,8 @@ import java.util.function.Function;
 
 import static de.gtrefs.combinator.ValidatorShould.UserValidation.eMailContainsAtSign;
 import static de.gtrefs.combinator.ValidatorShould.UserValidation.nameIsNotEmpty;
+import static de.gtrefs.combinator.ValidatorShould.ValidationResult.invalid;
+import static de.gtrefs.combinator.ValidatorShould.ValidationResult.valid;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -34,12 +36,14 @@ public class ValidatorShould {
     }
 
     public interface UserValidation extends Function<User, ValidationResult> {
-        UserValidation nameIsNotEmpty = todo(); // user -> !user.name.trim().isEmpty();
-        UserValidation eMailContainsAtSign = todo(); // user -> user.email.contains("@");
+        UserValidation nameIsNotEmpty = user -> user.name.trim().isEmpty()?invalid("User name is empty") : valid();
+        UserValidation eMailContainsAtSign = user -> user.email.contains("@")?valid() : invalid("E-Mail is not valid.");
 
         default UserValidation and(UserValidation other){
-            return todo();
-//          return user -> this.apply(user) && other.apply(user);
+            return user -> {
+                final ValidationResult result = this.apply(user);
+                return result.isValid() ? other.apply(user) : result;
+            };
         }
     }
 
