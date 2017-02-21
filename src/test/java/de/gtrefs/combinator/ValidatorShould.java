@@ -2,11 +2,14 @@ package de.gtrefs.combinator;
 
 import org.junit.Test;
 
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
+import static de.gtrefs.combinator.ValidatorShould.UserValidation.eMailContainsAtSign;
+import static de.gtrefs.combinator.ValidatorShould.UserValidation.nameIsNotEmpty;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static de.gtrefs.combinator.ValidatorShould.UserValidation.*;
 
 public class ValidatorShould {
 
@@ -16,15 +19,27 @@ public class ValidatorShould {
 
         UserValidation validation = nameIsNotEmpty.and(eMailContainsAtSign);
 
-        assertThat(validation.apply(gregor), is(true));
+        assertThat(validation.apply(gregor).isValid(), is(true));
     }
 
-    public interface UserValidation extends Function<User, Boolean> {
-        UserValidation nameIsNotEmpty = user -> !user.name.trim().isEmpty();
-        UserValidation eMailContainsAtSign = user -> user.email.contains("@");
+    @Test
+    public void yield_invalid_for_user_without_email(){
+        final User gregor = new User("Gregor Trefs", 31, "");
+
+        final UserValidation validation = nameIsNotEmpty.and(eMailContainsAtSign);
+        final ValidationResult validationResult = validation.apply(gregor);
+
+        assertThat(validationResult.isValid(), is(false));
+        assertThat(validationResult.getReason().get(), is("E-Mail is not valid."));
+    }
+
+    public interface UserValidation extends Function<User, ValidationResult> {
+        UserValidation nameIsNotEmpty = todo(); // user -> !user.name.trim().isEmpty();
+        UserValidation eMailContainsAtSign = todo(); // user -> user.email.contains("@");
 
         default UserValidation and(UserValidation other){
-            return user -> this.apply(user) && other.apply(user);
+            return todo();
+//          return user -> this.apply(user) && other.apply(user);
         }
     }
 
@@ -40,7 +55,69 @@ public class ValidatorShould {
         }
     }
 
-    private <T> T todo(){
+    interface ValidationResult{
+        static ValidationResult valid(){
+            return ValidationSupport.valid();
+        }
+
+        static ValidationResult invalid(String reason){
+            return new Invalid(reason);
+        }
+
+        boolean isValid();
+
+        Optional<String> getReason();
+    }
+
+    private final static class Invalid implements ValidationResult {
+
+        private final String reason;
+
+        Invalid(String reason){
+            this.reason = reason;
+        }
+
+        public boolean isValid(){
+            return false;
+        }
+
+        public Optional<String> getReason(){
+            return Optional.of(reason);
+        }
+
+        @Override
+        public String toString() {
+            return "Invalid{" +
+                   "reason='" + reason + '\'' +
+                   '}';
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) { return true; }
+            if (!(o instanceof Invalid)) { return false; }
+            Invalid invalid = (Invalid) o;
+            return Objects.equals(reason, invalid.reason);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(reason);
+        }
+    }
+
+    private static final class ValidationSupport {
+        private static final ValidationResult valid = new ValidationResult(){
+            public boolean isValid(){ return true; }
+            public Optional<String> getReason(){ return Optional.empty(); }
+        };
+
+        static ValidationResult valid(){
+            return valid;
+        }
+    }
+
+    private static  <T> T todo(){
         throw new UnsupportedOperationException();
     }
 }
