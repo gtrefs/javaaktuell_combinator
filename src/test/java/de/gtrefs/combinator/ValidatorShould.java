@@ -2,6 +2,7 @@ package de.gtrefs.combinator;
 
 import org.junit.Test;
 
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -33,6 +34,24 @@ public class ValidatorShould {
 
         assertThat(validationResult.isValid(), is(false));
         assertThat(validationResult.getReason().get(), is("E-Mail is not valid."));
+    }
+
+    @Test
+    public void sort_users_by_age_and_name(){
+        final User gregor = new User("Gregor Trefs", 31, "gregor@mailinator.com");
+        final User petra = new User("Petra Kopfler", 30, "petra@mailinator.com");
+        final User robert = new User("Robert Schmidt", 31, "robert@mailinator.com");
+
+        Comparator<User> byAge = Comparator.comparing(user -> user.age);
+        Comparator<User> byName = Comparator.comparing(user -> user.name);
+
+        Comparator<User> byAgeAndName = byAge.thenComparing(byName);
+
+        final int gregorVsPetra = byAgeAndName.compare(gregor, petra);
+        final int gregorVsRobert = byAgeAndName.compare(gregor, robert);
+
+        assertThat(gregorVsPetra, is(1));
+        assertThat(gregorVsRobert, is(-11));
     }
 
     public interface UserValidation extends Function<User, ValidationResult> {
