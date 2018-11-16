@@ -4,8 +4,10 @@ repositories {
     jcenter()
 }
 
+sourceCompatibility=11
+targetCompatibility=11
+
 dependencies {
     compile 'com.google.guava:guava:20.0'
     testCompile 'junit:junit:4.12'
 }
-
