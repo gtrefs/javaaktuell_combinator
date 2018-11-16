@@ -11,6 +11,7 @@ import static de.gtrefs.combinator.ValidatorShould.UserValidation.eMailContainsA
 import static de.gtrefs.combinator.ValidatorShould.UserValidation.nameIsNotEmpty;
 import static de.gtrefs.combinator.ValidatorShould.ValidationResult.invalid;
 import static de.gtrefs.combinator.ValidatorShould.ValidationResult.valid;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -51,7 +52,39 @@ public class ValidatorShould {
         assertThat(byAgeThenName.compare(gregor, robert), is(-11));
     }
 
+    @Test
+    public void use_combinators_from_different_namespaces(){
+        var gregor = new User("Gregor Trefs", 32, "gregor@mailinator.com");
+        var validations = (NameValidations & AgeValidations) UserValidation::create;
+
+        var validator = validations.olderThan(20).and(validations.nameIsUpperCase());
+        var validationResult = validator.apply(gregor);
+
+        assertThat(validationResult.getReason().get(), containsString("upper case."));
+    }
+
+    public interface NameValidations extends UserValidation {
+        default UserValidation nameIsUpperCase(){
+            return (var user) -> {
+                String message = String.format("User %s must be named in all upper case.", user.toString());
+                return user.name.chars().allMatch(c -> c >= 65 && c <= 90)? valid(): invalid(message);
+            };
+        }
+    }
+
+    public interface AgeValidations extends UserValidation {
+        default UserValidation olderThan(int age){
+            return (var user) -> {
+                String message = String.format("User %s must be older than %d.", user.toString(), age);
+                return user.age > age? valid() : invalid(message);
+            };
+        }
+    }
     public interface UserValidation extends Function<User, ValidationResult> {
+        static ValidationResult create(User user){
+            throw new UnsupportedOperationException();
+        }
+
         UserValidation nameIsNotEmpty = user -> user.name.trim().isEmpty()?invalid("User name is empty") : valid();
         UserValidation eMailContainsAtSign = user -> user.email.contains("@")?valid() : invalid("E-Mail is not valid.");
 
@@ -72,6 +105,15 @@ public class ValidatorShould {
             this.name = name;
             this.age = age;
             this.email = email;
+        }
+
+        @Override
+        public String toString() {
+            return "User{" +
+                    "name='" + name + '\'' +
+                    ", age=" + age +
+                    ", email='" + email + '\'' +
+                    '}';
         }
     }
 
