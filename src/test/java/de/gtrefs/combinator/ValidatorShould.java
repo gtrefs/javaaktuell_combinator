@@ -18,7 +18,7 @@ public class ValidatorShould {
 
     @Test
     public void yield_valid_for_user_with_email_and_non_empty_name(){
-        final User gregor = new User("Gregor Trefs", 31, "mail@mailinator.com");
+        final User gregor = new User("Gregor Trefs", 32, "mail@mailinator.com");
 
         UserValidation validation = nameIsNotEmpty.and(eMailContainsAtSign);
 
@@ -27,7 +27,7 @@ public class ValidatorShould {
 
     @Test
     public void yield_invalid_for_user_without_email(){
-        final User gregor = new User("Gregor Trefs", 31, "");
+        final User gregor = new User("Gregor Trefs", 32, "");
 
         final UserValidation validation = nameIsNotEmpty.and(eMailContainsAtSign);
         final ValidationResult validationResult = validation.apply(gregor);
@@ -38,20 +38,17 @@ public class ValidatorShould {
 
     @Test
     public void sort_users_by_age_and_name(){
-        final User gregor = new User("Gregor Trefs", 31, "gregor@mailinator.com");
+        final User gregor = new User("Gregor Trefs", 32, "gregor@mailinator.com");
         final User petra = new User("Petra Kopfler", 30, "petra@mailinator.com");
-        final User robert = new User("Robert Schmidt", 31, "robert@mailinator.com");
+        final User robert = new User("Robert Schmidt", 32, "robert@mailinator.com");
 
         Comparator<User> byAge = Comparator.comparing(user -> user.age);
         Comparator<User> byName = Comparator.comparing(user -> user.name);
 
-        Comparator<User> byAgeAndName = byAge.thenComparing(byName);
+        Comparator<User> byAgeThenName = byAge.thenComparing(byName);
 
-        final int gregorVsPetra = byAgeAndName.compare(gregor, petra);
-        final int gregorVsRobert = byAgeAndName.compare(gregor, robert);
-
-        assertThat(gregorVsPetra, is(1));
-        assertThat(gregorVsRobert, is(-11));
+        assertThat(byAgeThenName.compare(gregor, petra), is(1));
+        assertThat(byAgeThenName.compare(gregor, robert), is(-11));
     }
 
     public interface UserValidation extends Function<User, ValidationResult> {
