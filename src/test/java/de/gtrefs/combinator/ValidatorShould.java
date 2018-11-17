@@ -96,7 +96,7 @@ public class ValidatorShould {
         }
     }
 
-    class User {
+    static class User {
         final String name;
         final int age;
         final String email;
